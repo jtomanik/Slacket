@@ -111,6 +111,10 @@ struct PocketAuthorizationHandler: Handler, ErrorType {
                                                       pocketUsername: accessTokenResponse.pocketUsername)
                     let _ = SlacketUserDataStore.sharedInstance.set(data: fullSlacketUser)
                     messageView.show(message: .authorized)
+                    request.replaceParsedUrl(url: "/index.html", matchedPath: "/")
+                    let staticServer = StaticFileServer(path: repoDirectory+"public/")
+                    staticServer.handle(request: request, response: response, next: { _ in })
+
                     return
                 }
             }

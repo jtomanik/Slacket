@@ -8,7 +8,7 @@
 
 import Foundation
 import Kitura
-import HealthCheck
+//import HealthCheck
 
 import libc
 
@@ -33,8 +33,8 @@ struct Slacket: ServerModuleType {
     }
 
     mutating func setupRoutes() {
-        let _ = router.get("/health-check", middleware: HealthCheck())
-        let _ = router.get("/", middleware: StaticFileServer(path: repoDirectory+"public/"))
+        //let _ = router.get("/health-check", middleware: HealthCheck())
+        router.get("/", middleware: StaticFileServer(path: repoDirectory+"public/"))
         router.all("api/*", middleware: BodyParser())
         router.all("api/*", middleware: SlacketHandler())
     }

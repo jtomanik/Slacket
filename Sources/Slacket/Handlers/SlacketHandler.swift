@@ -16,6 +16,7 @@ enum SlacketAction: HandlerAction {
     
     case addCommand
     case authorizePocket
+    case test
     
     static func from(route: String?) -> SlacketAction? {
         guard let route = route else {
@@ -26,6 +27,8 @@ enum SlacketAction: HandlerAction {
             return SlacketAction.addCommand
         case let r where r.startsWith(prefix: SlacketAction.authorizePocket.route):
             return SlacketAction.authorizePocket
+        case let r where r.startsWith(prefix: SlacketAction.test.route):
+            return SlacketAction.test
         default:
             return nil
         }
@@ -37,6 +40,8 @@ enum SlacketAction: HandlerAction {
             return "api/v1/slack"
         case .authorizePocket:
             return "api/v1/authorize"
+        case .test:
+            return "api/v1/test"
         }
     }
     
@@ -50,6 +55,8 @@ enum SlacketAction: HandlerAction {
             return .post
         case .authorizePocket:
             return .get
+        case .test:
+            return .get
         }
     }
     
@@ -58,6 +65,8 @@ enum SlacketAction: HandlerAction {
         case .addCommand:
             return ParsedBody.urlEncoded([:])
         case .authorizePocket:
+            return nil
+        case .test:
             return nil
         }
     }
@@ -90,6 +99,10 @@ struct SlacketHandler: Handler, RouterMiddleware, ErrorType {
         case .authorizePocket:
             PocketAuthorizationHandler().handle(request: request, response: response, next: next)
 
+        case .test:
+            request.replaceParsedUrl(url: "/index.html", matchedPath: "/")
+            let staticServer = StaticFileServer(path: repoDirectory+"public/")
+            staticServer.handle(request: request, response: response, next: next)
         }
     }
 }

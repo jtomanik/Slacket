@@ -32,3 +32,5 @@ let router = Router()
 let slacket = Slacket(using: router)
 Kitura.addHTTPServer(onPort: InternalServerConfig().port!, with: router)
 Kitura.run()
+
+// panie kiturawez sie ogarnij dziekuje :)
