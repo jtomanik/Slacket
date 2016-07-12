@@ -7,18 +7,19 @@
 //
 
 import Foundation
+import When
 import LoggerAPI
 
 protocol SlacketServiceProvider {
     
-    static func process(request: SlackCommandType, respond: ((SlackMessageType?) -> ()))
+    static func process(request: SlackCommandType) ->
 }
 
 struct SlacketService: SlacketServiceProvider {
     
     static let errorDomain = "SlacketUserService"
     
-    static func process(request: SlackCommandType, respond: ((SlackMessageType?) -> ())) {
+    static func process(request: SlackCommandType) -> Promise<SlackMessageType> {
         
         if let slacketUser = SlacketUserDataStore.sharedInstance.get(keyId: request.userId) where slacketUser.pocketAccessToken != nil,
         let command = request.command.withoutPercentEncoding(),

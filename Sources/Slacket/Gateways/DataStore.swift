@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import When
 
 protocol StoreType { }
 
@@ -21,7 +22,7 @@ protocol DataStoreProvider: StoreType {
     
     associatedtype Storable: StorableType
 
-    func get(keyId: Storable.Identifier) -> Storable?
-    func set(data: Storable) -> Bool
-    func clear(keyId: Storable.Identifier) -> Bool
+    func get(keyId: Storable.Identifier) -> Promise<Storable>
+    func set(data: Storable) -> Promise<Bool>
+    func clear(keyId: Storable.Identifier) -> Promise<Bool>
 }
