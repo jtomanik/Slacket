@@ -21,18 +21,27 @@ protocol SlackConnectorType {
 struct SlackApiConnector: SlackConnectorType {
     
     static func send(message: SlackMessageType, inResponse command: SlackCommandType) -> Promise<Bool> {
+        let promise = Promise<Bool>()
         let slackEndpoint = SlackAPI.respond(command: command, message: message)
         slackEndpoint.request { error, status, headers, data in
             guard let status = status else {
-                Log.error(ConnectorError.missingStatus(for: .Slack).description)
-                fatalError()
+                let error = ConnectorError.missingStatus(for: .Slack)
+                Log.error(error.description)
+                promise.reject(error: error)
+                return
             }
             
             if 200...299 ~= status {
-                completion?(true)
+                promise.resolve(value: true)
+                return
             } else {
-                completion?(false)
+                //TODO: ConnectorError.statusNotOk
+                let error = ConnectorError.statusNotOk(for: .Slack)
+                Log.error(error.description)
+                promise.reject(error: error)
+                return
             }
         }
+        return promise
     }
 }
