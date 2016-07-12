@@ -17,16 +17,31 @@ protocol InMemoryStoreProvider: class, DataStoreProvider {
 extension InMemoryStoreProvider {
 
     func get(keyId: Storable.Identifier) -> Promise<Storable> {
-        return self.memoryStore[keyId]
+        let promise = Promise<Storable>()
+        if let value = memoryStore[keyId] {
+            promise.resolve(value: value)
+        } else {
+            // TODO: create DataStoreError.keyNotFound
+            promise.reject(error: DataStoreError.keyNotFound)
+        }
+        return promise
     }
 
     func set(data: Storable) -> Promise<Bool> {
-        self.memoryStore[data.keyId] = data
-        return true
+        let promise = Promise<Bool>()
+        memoryStore[data.keyId] = data
+        promise.resolve(value: true)
+        return promise
     }
 
     func clear(keyId: Storable.Identifier) -> Promise<Bool> {
-        let object = self.memoryStore.removeValue(forKey: keyId)
-        return object != nil
+        let promise = Promise<Bool>()
+        if let value = memoryStore.removeValue(forKey: keyId) {
+            promise.resolve(value: true)
+        } else {
+            // TODO: create DataStoreError.keyNotFound
+            promise.reject(error: DataStoreError.keyNotFound)
+        }
+        return promise
     }
 }
