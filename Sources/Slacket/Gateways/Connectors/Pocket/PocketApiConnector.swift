@@ -14,45 +14,58 @@ import SimpleHttpClient
 import When
 
 protocol PocketConnectorType {
-    
+
     static func addLink(url: String, tags: [String]?, user: SlacketUserType) -> Promise<PocketItemType>
 }
 
 struct PocketApiConnector: PocketConnectorType {
-    
+
     static func addLink(url: String, tags: [String]?, user: SlacketUserType) -> Promise<PocketItemType> {
+
+        let promise = Promise<PocketItemType>()
         guard let pocketAccessToken = user.pocketAccessToken else {
-            Log.error(ConnectorError.missingAccessToken.description)
-            return completion(nil)
+            let error = ConnectorError.missingAccessToken
+            Log.error(error.description)
+            promise.reject(error: error)
+            return promise
         }
-        
+
         let pocketAddRequest = PocketAddRequest(url: url,
                                                 accessToken: pocketAccessToken,
                                                 title: nil,
                                                 tags: tags,
                                                 tweetId: nil)
         let pocketEndpoint = PocketAPI.add(pocketAddRequest)
+
         pocketEndpoint.request() { error, status, headers, data in
             guard let status = status else {
-                Log.error(ConnectorError.missingStatus(for: .Pocket).description)
-                fatalError()
+                let error = ConnectorError.missingStatus(for: .Pocket)
+                Log.error(error.description)
+                promise.reject(error: error)
+                return
             }
+
             Log.debug("pocketEndpoint.request() returned status \(status)")
             Log.debug("pocketEndpoint.request() returned headers\n\(headers)")
-            
-            if let data = data where 200...299 ~= status,
-                let pocketAddResponseBody = ParsedBody.init(data: data, contentType: pocketEndpoint.acceptContentType) {
-                if let pocketAddResponse = PocketAddResponseParser.parse(body: pocketAddResponseBody)
-                    where pocketAddResponse.status == 1 {
-                    completion(pocketAddResponse.item)
+
+            if 200...299 ~= status {
+                if let data = data,
+                    let pocketAddResponseBody = ParsedBody.init(data: data, contentType: pocketEndpoint.acceptContentType),
+                    let pocketAddResponse = PocketAddResponseParser.parse(body: pocketAddResponseBody) where pocketAddResponse.status == 1 {
+                    promise.resolve(value: pocketAddResponse.item)
                 } else {
-                    Log.debug(ConnectorError.missingStatus(for: .Pocket).description)
-                    completion(nil)
+                    //TODO: ConnectorError.nilDataReturned
+                    let error = ConnectorError.nilDataReturned(for: .Pocket)
+                    Log.debug(error.description)
+                    promise.reject(error: error)
                 }
             } else {
-                Log.debug(ConnectorError.nilDataParsedBodyOrAccessTokenResponse.description)
-                completion(nil)
+                //TODO: ConnectorError.statusNotOk
+                let error = ConnectorError.statusNotOk(for: .Pocket)
+                Log.debug(error.description)
+                promise.reject(error: error)
             }
         }
+        return promise
     }
 }
