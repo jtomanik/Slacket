@@ -21,8 +21,10 @@ protocol SlackConnectorType {
 struct SlackApiConnector: SlackConnectorType {
     
     static func send(message: SlackMessageType, inResponse command: SlackCommandType) -> Promise<Bool> {
+        
         let promise = Promise<Bool>()
         let slackEndpoint = SlackAPI.respond(command: command, message: message)
+
         slackEndpoint.request { error, status, headers, data in
             guard let status = status else {
                 let error = ConnectorError.missingStatus(for: .Slack)
