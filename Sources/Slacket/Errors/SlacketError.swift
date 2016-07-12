@@ -9,18 +9,10 @@
 import Foundation
 
 enum SlacketError: ErrorProtocol, DescribableError {
-    enum MethodType: String {
-        case get
-        case set
-        case del
-    }
-    
     case pocketAuthorization
     case pocketUnknown
     case pocketMissingConsumerKey
     case slackMissingToken
-    case redisMissingHost
-    case redisStoreProviderError(for: MethodType)
     case slacketHandlerCouldntHandleCommand
     case slacketHandlerCouldntParseCommand
     case slacketHandlerActionCouldntInit
@@ -39,10 +31,6 @@ enum SlacketError: ErrorProtocol, DescribableError {
                 return "Cannot find POCKET_CONSUMER_KEY environmental variable"
             case .slackMissingToken:
                 return "Cannot find SLACK_TOKEN environmental variable"
-            case .redisMissingHost:
-                return "Cannot find REDIS_HOST environmental variable"
-            case .redisStoreProviderError(let methodType):
-                return "RedisStoreProvider \(methodType.rawValue) error"
             case .slacketHandlerCouldntHandleCommand:
                 return "SlacketHandler SlackCommand couldn't be handled"
             case .slacketHandlerCouldntParseCommand:
