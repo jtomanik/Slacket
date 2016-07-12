@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum SlacketError: ErrorProtocol, DescribableError {
+enum SlacketError: ErrorProtocol, Describable {
     case pocketAuthorization
     case pocketUnknown
     case pocketMissingConsumerKey

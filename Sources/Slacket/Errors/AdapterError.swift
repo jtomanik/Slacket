@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum AdapterError: ErrorProtocol, DescribableError {
+enum AdapterError: ErrorProtocol, Describable {
     case parsedBodyNilContentTypeString
     case parsedBodyFailedJsonSerialization
     case parsedBodyFailedParsingContentType

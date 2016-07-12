@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum ConnectorError: ErrorProtocol, DescribableError {
+enum ConnectorError: ErrorProtocol, Describable {
     enum ApiType: String {
         case Slack
         case Pocket
