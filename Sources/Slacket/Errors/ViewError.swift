@@ -9,7 +9,7 @@
 import Foundation
 import KituraNet
 
-enum ViewError: ErrorProtocol, DescribableError {
+enum ViewError: ErrorProtocol, Describable {
     case responseSendFailure(for: ErrorProtocol)
     case messageParsingFailure
     case templateParsingFailure

@@ -14,7 +14,7 @@ enum MethodType: String {
     case del
 }
 
-enum DataStoreError: ErrorProtocol, DescribableError {
+enum DataStoreError: ErrorProtocol, Describable {
     case missingRedisHostEnvVariable
     case notFound(key: String)
     case clientNotFound

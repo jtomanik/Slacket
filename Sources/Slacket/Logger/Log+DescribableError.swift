@@ -1,5 +1,5 @@
 //
-//  Log+DescribableError.swift
+//  Log+Describable.swift
 //  Slacket
 //
 //  Created by Bartłomiej Nowak on 12/07/16.
@@ -11,11 +11,11 @@ import LoggerAPI
 
 extension Log {
     
-    static func debug(_ errorType: DescribableError) {
+    static func debug(_ errorType: Describable) {
         debug(errorType.description)
     }
     
-    static func error(_ errorType: DescribableError) {
+    static func error(_ errorType: Describable) {
         error(errorType.description)
     }
 }
