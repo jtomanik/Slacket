@@ -21,8 +21,7 @@ extension InMemoryStoreProvider {
         if let value = memoryStore[keyId] {
             promise.resolve(value: value)
         } else {
-            // TODO: create DataStoreError.keyNotFound
-            promise.reject(error: DataStoreError.keyNotFound)
+            promise.reject(error: DataStoreError.notFound(key: String(keyId)))
         }
         return promise
     }
@@ -36,11 +35,10 @@ extension InMemoryStoreProvider {
 
     func clear(keyId: Storable.Identifier) -> Promise<Bool> {
         let promise = Promise<Bool>()
-        if let value = memoryStore.removeValue(forKey: keyId) {
+        if memoryStore.removeValue(forKey: keyId) != nil {
             promise.resolve(value: true)
         } else {
-            // TODO: create DataStoreError.keyNotFound
-            promise.reject(error: DataStoreError.keyNotFound)
+            promise.reject(error: DataStoreError.notFound(key: String(keyId)))
         }
         return promise
     }
