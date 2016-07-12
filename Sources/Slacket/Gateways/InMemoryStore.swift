@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import When
 
 protocol InMemoryStoreProvider: class, DataStoreProvider {
 
@@ -15,16 +16,16 @@ protocol InMemoryStoreProvider: class, DataStoreProvider {
 
 extension InMemoryStoreProvider {
 
-    func get(keyId: Storable.Identifier) -> Storable? {
+    func get(keyId: Storable.Identifier) -> Promise<Storable> {
         return self.memoryStore[keyId]
     }
 
-    func set(data: Storable) -> Bool {
+    func set(data: Storable) -> Promise<Bool> {
         self.memoryStore[data.keyId] = data
         return true
     }
 
-    func clear(keyId: Storable.Identifier) -> Bool {
+    func clear(keyId: Storable.Identifier) -> Promise<Bool> {
         let object = self.memoryStore.removeValue(forKey: keyId)
         return object != nil
     }

@@ -8,17 +8,18 @@
 
 import Foundation
 import LoggerAPI
+import When
 
 protocol PocketAccessTokenRequestServiceProvider {
     
-    static func process(user: SlacketUserType, respond: (PocketAccessTokenResponseType?) -> Void)
+    static func process(user: SlacketUserType) -> Promise<PocketAccessTokenResponseType>
 }
 
 struct PocketAccessTokenRequestService: PocketAccessTokenRequestServiceProvider {
     
     static let errorDomain = "PocketAccessTokenRequestService"
     
-    static func process(user: SlacketUserType, respond: (PocketAccessTokenResponseType?) -> Void) {
+    static func process(user: SlacketUserType) -> Promise<PocketAccessTokenResponseType> {
         guard let user = user as? SlacketUser else {
             Log.debug("user is nil")
             respond(nil)

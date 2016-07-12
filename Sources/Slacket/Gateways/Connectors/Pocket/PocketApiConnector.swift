@@ -11,15 +11,16 @@ import Kitura
 import HeliumLogger
 import LoggerAPI
 import SimpleHttpClient
+import When
 
 protocol PocketConnectorType {
     
-    static func addLink(url: String, tags: [String]?, user: SlacketUserType, completion: (PocketItemType?) -> Void )
+    static func addLink(url: String, tags: [String]?, user: SlacketUserType) -> Promise<PocketItemType>
 }
 
 struct PocketApiConnector: PocketConnectorType {
     
-    static func addLink(url: String, tags: [String]?, user: SlacketUserType, completion: (PocketItemType?) -> Void) {
+    static func addLink(url: String, tags: [String]?, user: SlacketUserType) -> Promise<PocketItemType> {
         guard let pocketAccessToken = user.pocketAccessToken else {
             Log.error(ConnectorError.missingAccessToken.description)
             return completion(nil)

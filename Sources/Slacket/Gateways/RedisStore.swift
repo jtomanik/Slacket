@@ -10,6 +10,7 @@ import Foundation
 import Environment
 import Redbird
 import LoggerAPI
+import When
 
 protocol RedisClientType {
 
@@ -48,7 +49,7 @@ extension RedisStoreProvider where Storable: RedisStorableType, Storable.Identif
         return RedisStore.sharedInstance
     }
 
-    func get(keyId: Storable.Identifier) -> Storable? {
+    func get(keyId: Storable.Identifier) -> Promise<Storable> {
         if let client = self.redisStore.client,
             let object = try? client.command("GET", params: [keyId]),
             let storable = Storable.deserialize(redisObject: object) {
@@ -60,7 +61,7 @@ extension RedisStoreProvider where Storable: RedisStorableType, Storable.Identif
         }
     }
 
-    func set(data: Storable) -> Bool {
+    func set(data: Storable) -> Promise<Bool> {
         if let client = self.redisStore.client,
             let serialized = data.serialize(),
             let result = try? client.command("SET", params: [data.keyId, serialized]).toString() {
@@ -72,7 +73,7 @@ extension RedisStoreProvider where Storable: RedisStorableType, Storable.Identif
         }
     }
 
-    func clear(keyId: Storable.Identifier) -> Bool {
+    func clear(keyId: Storable.Identifier) -> Promise<Bool> {
         if let client = self.redisStore.client,
             let result = try? client.command("DEL", params: [keyId]).toInt() {
             Log.debug("Redis DEL for key: \(keyId)")

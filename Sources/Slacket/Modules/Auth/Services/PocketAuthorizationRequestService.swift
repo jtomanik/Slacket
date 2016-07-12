@@ -8,19 +8,20 @@
 
 import Foundation
 import LoggerAPI
+import When
 
 typealias RedirectUrl = String
 
 protocol PocketAuthorizationRequestServiceProvider {
     
-    static func process(user: SlacketUserType, respond: (RedirectUrl?) -> Void )
+    static func process(user: SlacketUserType) -> Promise<RedirectUrl>
 }
 
 struct PocketAuthorizationRequestService: PocketAuthorizationRequestServiceProvider {
     
     static let errorDomain = "PocketAuthorizationRequestService"
     
-    static func process(user: SlacketUserType, respond: (RedirectUrl?) -> Void ) {
+    static func process(user: SlacketUserType) -> Promise<RedirectUrl> {
         guard let user = user as? SlacketUser else {
             respond(nil)
             return

@@ -11,16 +11,17 @@ import Kitura
 import HeliumLogger
 import LoggerAPI
 import SimpleHttpClient
+import When
 
 protocol PocketAuthorizeAPIConnectorType {
     
-    static func requestAuthorization(redirectUrl url: RedirectUrl, completion: ((PocketAuthorizationResponseType, RedirectUrl)?) -> Void )
-    static func requestAccessToken(data: PocketAuthorizationData, completion: (PocketAccessTokenResponseType?) -> Void )
+    static func requestAuthorization(redirectUrl url: RedirectUrl) -> Promise<(PocketAuthorizationResponseType, RedirectUrl)>
+    static func requestAccessToken(data: PocketAuthorizationData) -> Promise<PocketAccessTokenResponseType>
 }
 
 struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
     
-    static func requestAuthorization(redirectUrl url: RedirectUrl, completion: ((PocketAuthorizationResponseType, RedirectUrl)?) -> Void ) {
+    static func requestAuthorization(redirectUrl url: RedirectUrl) -> Promise<(PocketAuthorizationResponseType, RedirectUrl)> {
         
         let requestData = PocketAuthorizationRequest(pocketRedirectUri: url)
         let authorizeEndpoint = PocketAuthorizeAPI.requestAuthorization(requestData)
@@ -45,7 +46,7 @@ struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
         }
     }
     
-    static func requestAccessToken(data: PocketAuthorizationData, completion: (PocketAccessTokenResponseType?) -> Void ) {
+    static func requestAccessToken(data: PocketAuthorizationData) -> Promise<PocketAccessTokenResponseType> {
         
         let requestData = PocketAccessTokenRequest(pocketRequestToken: data.requestToken)
         let accessTokenEndpoint = PocketAuthorizeAPI.requestAccessToken(requestData)

@@ -12,7 +12,7 @@ import LoggerAPI
 
 protocol SlacketServiceProvider {
     
-    static func process(request: SlackCommandType) ->
+    static func process(request: SlackCommandType) -> Promise<SlackMessageType>
 }
 
 struct SlacketService: SlacketServiceProvider {
