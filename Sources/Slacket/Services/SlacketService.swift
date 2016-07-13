@@ -52,8 +52,8 @@ struct SlacketService: SlacketServiceProvider {
                                           pocketAccessToken: nil,
                                           pocketUsername: nil)
                 let savingResult = SlacketUserDataStore.sharedInstance.set(data: newUser)
-                savingResult.then({ _ in
-                    let message = self.startAuthorizationFlow(request)
+                savingResult.done(handler: { _ in
+                    let message = self.startAuthorizationFlow(user: newUser)
                     promise.resolve(value: message)
                 }).fail(handler: { error in
                     promise.reject(error: error)
@@ -65,13 +65,13 @@ struct SlacketService: SlacketServiceProvider {
         return promise
     }
 
-    private func startAuthorizationFlow(request: SlackCommandType) -> SlackMessageType {
-        let userMessage = "Please go to \(PocketAuthorizationAction.authorizationRequest.redirectUrl(user: newUser))"
+    private static func startAuthorizationFlow(user: SlacketUser) -> SlackMessageType {
+        let userMessage = "Please go to \(PocketAuthorizationAction.authorizationRequest.redirectUrl(user: user))"
         let message = SlackMessage(responseVisibility: .ephemeral, text: userMessage)
         return message
     }
 
-    private func generateEcho(for request: SlackCommandType) -> SlackMessageType {
+    private static func generateEcho(for request: SlackCommandType) -> SlackMessageType {
         let command = request.command.withoutPercentEncoding() ?? "Could not parse"
         let text = request.text.withoutPercentEncoding() ?? ""
         let message = SlackMessage(responseVisibility: .ephemeral,
