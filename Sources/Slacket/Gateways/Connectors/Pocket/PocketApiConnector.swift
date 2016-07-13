@@ -39,7 +39,7 @@ struct PocketApiConnector: PocketConnectorType {
 
         pocketEndpoint.request() { error, status, headers, data in
             guard let status = status else {
-                let error = ConnectorError.missingStatus(for: .Pocket)
+                let error = ConnectorError.missingStatus(for: .pocket)
                 Log.error(error.description)
                 promise.reject(error: error)
                 return
@@ -55,13 +55,13 @@ struct PocketApiConnector: PocketConnectorType {
                     promise.resolve(value: pocketAddResponse.item)
                 } else {
                     //TODO: ConnectorError.nilDataReturned
-                    let error = ConnectorError.nilDataReturned(for: .Pocket)
+                    let error = ConnectorError.nilDataReturned(for: .pocket)
                     Log.debug(error.description)
                     promise.reject(error: error)
                 }
             } else {
                 //TODO: ConnectorError.statusNotOk
-                let error = ConnectorError.statusNotOk(for: .Pocket)
+                let error = ConnectorError.statusNotOk(for: .pocket)
                 Log.debug(error.description)
                 promise.reject(error: error)
             }

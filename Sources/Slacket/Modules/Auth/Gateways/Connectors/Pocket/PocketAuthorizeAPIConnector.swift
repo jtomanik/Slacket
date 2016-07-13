@@ -29,7 +29,7 @@ struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
 
         authorizeEndpoint.request() { error, status, headers, data in
             guard let status = status else {
-                let error = ConnectorError.missingStatus(for: .PocketAuthorizationRequest)
+                let error = ConnectorError.missingStatus(for: .pocketAuthorizationRequest)
                 Log.error(error.description)
                 promise.reject(error: error)
                 return
@@ -46,13 +46,13 @@ struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
                     promise.resolve(value: (authorizationResponse, redirectUrl))
                 } else {
                     //TODO: ConnectorError.nilDataReturned
-                    let error = ConnectorError.nilDataReturned(for: .PocketAuthorizationRequest)
+                    let error = ConnectorError.nilDataReturned(for: .pocketAuthorizationRequest)
                     Log.debug(error.description)
                     promise.reject(error: error)
                 }
             } else {
                 //TODO: ConnectorError.statusNotOk
-                let error = ConnectorError.statusNotOk(for: .PocketAuthorizationRequest)
+                let error = ConnectorError.statusNotOk(for: .pocketAuthorizationRequest)
                 Log.debug(error.description)
                 promise.reject(error: error)
             }
@@ -68,7 +68,7 @@ struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
 
         accessTokenEndpoint.request() { error, status, headers, data in
             guard let status = status else {
-                let error = ConnectorError.missingStatus(for: .PocketAccessTokenRequest)
+                let error = ConnectorError.missingStatus(for: .pocketAccessTokenRequest)
                 Log.error(error.description)
                 promise.reject(error: error)
                 return
@@ -82,16 +82,16 @@ struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
                     let parsedBody = ParsedBody.init(data: data, contentType: accessTokenEndpoint.acceptContentType),
                     let accessTokenResponse = PocketAccessTokenResponseParser.parse(body: parsedBody) {
                     let accessTokenResponse = accessTokenResponse as PocketAccessTokenResponseType
-                    completion(accessTokenResponse)
+                    promise.resolve(value: accessTokenResponse)
                 } else {
                     //TODO: ConnectorError.nilDataReturned
-                    let error = ConnectorError.nilDataReturned(for: .PocketAccessTokenRequest)
+                    let error = ConnectorError.nilDataReturned(for: .pocketAccessTokenRequest)
                     Log.debug(error.description)
                     promise.reject(error: error)
                 }
             } else {
                 //TODO: ConnectorError.statusNotOk
-                let error = ConnectorError.statusNotOk(for: .PocketAccessTokenRequest)
+                let error = ConnectorError.statusNotOk(for: .pocketAccessTokenRequest)
                 Log.debug(error.description)
                 promise.reject(error: error)
             }

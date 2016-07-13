@@ -27,7 +27,7 @@ struct SlackApiConnector: SlackConnectorType {
 
         slackEndpoint.request { error, status, headers, data in
             guard let status = status else {
-                let error = ConnectorError.missingStatus(for: .Slack)
+                let error = ConnectorError.missingStatus(for: .slack)
                 Log.error(error.description)
                 promise.reject(error: error)
                 return
@@ -38,7 +38,7 @@ struct SlackApiConnector: SlackConnectorType {
                 return
             } else {
                 //TODO: ConnectorError.statusNotOk
-                let error = ConnectorError.statusNotOk(for: .Slack)
+                let error = ConnectorError.statusNotOk(for: .slack)
                 Log.error(error.description)
                 promise.reject(error: error)
                 return

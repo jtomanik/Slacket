@@ -10,13 +10,16 @@ import Foundation
 
 enum ConnectorError: ErrorProtocol, Describable {
     enum ApiType: String {
-        case Slack
-        case Pocket
+        case slack
+        case pocket
+        case pocketAuthorizationRequest
+        case pocketAccessTokenRequest
     }
     
     case missingAccessToken
     case missingStatus(for: ApiType)
-    case nilDataParsedBodyOrAccessTokenResponse
+    case nilDataReturned(for: ApiType)
+    case statusNotOk(for: ApiType)
     case addRequestNilUrl
     case connectorProviderUnsupportedMethod
     case addResponseCouldntDecode
@@ -39,8 +42,10 @@ enum ConnectorError: ErrorProtocol, Describable {
                 return "PocketApiConnector access token is nil"
             case .missingStatus(let apiType):
                 return "\(apiType.rawValue)ApiConnector request status is nil or status != 1"
-            case .nilDataParsedBodyOrAccessTokenResponse:
-                return "PocketApiConnector data, parsedBody or accessTokenResponse is nil"
+            case .nilDataReturned(let apiType):
+                return "\(apiType.rawValue)ApiConnector returned nil data"
+            case .statusNotOk(let apiType):
+                return "\(apiType.rawValue)ApiConnector returned status != 200"
             case .connectorProviderUnsupportedMethod:
                 return "ConnectorProvider unsupported endpoint method case"
             case .addRequestNilUrl:
