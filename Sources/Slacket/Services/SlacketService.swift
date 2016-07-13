@@ -22,19 +22,13 @@ struct SlacketService: SlacketServiceProvider {
     static func process(request: SlackCommandType) -> Promise<SlackMessageType> {
 
         let promise = Promise<SlackMessageType>()
+
         let dataRequest = SlacketUserDataStore.sharedInstance.get(keyId: request.userId)
-
-        dataRequest.then({ slacketUser in
-
-            if slacketUser.pocketAccessToken == nil {
-                let message = startAuthorizationFlow()
-                promise.resolve(value: message)
-                throw SlacketServiceError.userNotAuthorized
-            } else {
-                return slacketUser
+        dataRequest.then({ slacketUser -> Promise<PocketItemType> in
+            guard slacketUser.pocketAccessToken != nil else {
+                throw SlacketError.userNotAuthorized
             }
-        }).then({ slacketUser in
-
+            
             var url = request.text.trimWhitespace()
             if !url.hasPrefix("http") {
                 url = "http://" + url
@@ -42,32 +36,37 @@ struct SlacketService: SlacketServiceProvider {
             return PocketApiConnector.addLink(url: url,
                                               tags: [request.teamDomain, request.channelName],
                                               user: slacketUser)
-        }).then({ pocketItem in
+        }).then({ pocketItem -> Promise<Bool> in
 
             let slackMessage = SlackMessage(responseVisibility: .ephemeral, text: "successfully added link")
             return SlackApiConnector.send(message: slackMessage, inResponse: request)
-        }).fail({ error in
-            promise.reject(error: error)
-        })
-
-        dataRequest.fail({ error in
+        }).fail(handler: { error in
             // TODO: check error type for DB connection error
             // promise.reject(error: dbError)
             // return
 
-            let message = startAuthorizationFlow()
-            promise.resolve(value: message)
+            let nonCriticalError = true
+            if nonCriticalError {
+                let newUser = SlacketUser(slackId: request.userId,
+                                          slackTeamId: request.teamId,
+                                          pocketAccessToken: nil,
+                                          pocketUsername: nil)
+                let savingResult = SlacketUserDataStore.sharedInstance.set(data: newUser)
+                savingResult.then({ _ in
+                    let message = self.startAuthorizationFlow(request)
+                    promise.resolve(value: message)
+                }).fail(handler: { error in
+                    promise.reject(error: error)
+                })
+            } else {
+                promise.reject(error: error)
+            }
         })
         return promise
     }
 
-    private func startAuthorizationFlow() -> SlackMessageType {
-        let newUser = SlacketUser(slackId: request.userId,
-                                  slackTeamId: request.teamId,
-                                  pocketAccessToken: nil,
-                                  pocketUsername: nil)
-        let result = SlacketUserDataStore.sharedInstance.set(data: newUser)
-        let userMessage = result ? "Please go to \(PocketAuthorizationAction.authorizationRequest.redirectUrl(user: newUser))" : "Ooops... there was an internal error"
+    private func startAuthorizationFlow(request: SlackCommandType) -> SlackMessageType {
+        let userMessage = "Please go to \(PocketAuthorizationAction.authorizationRequest.redirectUrl(user: newUser))"
         let message = SlackMessage(responseVisibility: .ephemeral, text: userMessage)
         return message
     }
