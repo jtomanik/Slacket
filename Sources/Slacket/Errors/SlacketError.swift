@@ -21,6 +21,7 @@ enum SlacketError: ErrorProtocol, Describable {
     case slacketUserDeserialization
     case slacketUserSerialization
     case userNotAuthorized
+    case preconditionsNotMet
     
     var description: String {
         switch self {
@@ -48,6 +49,8 @@ enum SlacketError: ErrorProtocol, Describable {
                 return "SlacketUser serialization error"
             case .userNotAuthorized:
                 return "User is not authorized"
+            case .preconditionsNotMet:
+                return "Preconditions are not met"
         }
     }
 }
