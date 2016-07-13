@@ -11,27 +11,26 @@ import LoggerAPI
 import When
 
 protocol PocketAccessTokenRequestServiceProvider {
-    
+
     static func process(user: SlacketUserType) -> Promise<PocketAccessTokenResponseType>
 }
 
 struct PocketAccessTokenRequestService: PocketAccessTokenRequestServiceProvider {
-    
+
     static let errorDomain = "PocketAccessTokenRequestService"
-    
+
     static func process(user: SlacketUserType) -> Promise<PocketAccessTokenResponseType> {
         guard let user = user as? SlacketUser else {
-            Log.debug(ConnectorError.pocketAccessTokenRequestService)
-            respond(nil)
-            return
+            let promise = Promise<PocketAccessTokenResponseType>()
+            let error = SlacketError.preconditionsNotMet
+            Log.error(error.description)
+            promise.reject(error: error)
+            return promise
         }
-        
-        if let authData = PocketAuthorizationDataStore.sharedInstance.get(keyId: user.keyId) {
-            PocketAuthorizeAPIConnector.requestAccessToken(data: authData) { accessTokenResponse in
-                respond(accessTokenResponse)
-            }
-        } else {
-            Log.debug(ConnectorError.pocketAccessTokenRequestService)
-        }
+
+        let promise = PocketAuthorizationDataStore.sharedInstance.get(keyId: user.keyId)
+        return promise.then({ authData -> Promise<PocketAccessTokenResponseType> in
+            return PocketAuthorizeAPIConnector.requestAccessToken(data: authData)
+        })
     }
 }

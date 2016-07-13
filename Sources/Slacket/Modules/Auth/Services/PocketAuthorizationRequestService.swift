@@ -13,31 +13,32 @@ import When
 typealias RedirectUrl = String
 
 protocol PocketAuthorizationRequestServiceProvider {
-    
+
     static func process(user: SlacketUserType) -> Promise<RedirectUrl>
 }
 
 struct PocketAuthorizationRequestService: PocketAuthorizationRequestServiceProvider {
-    
+
     static let errorDomain = "PocketAuthorizationRequestService"
-    
+
     static func process(user: SlacketUserType) -> Promise<RedirectUrl> {
         guard let user = user as? SlacketUser else {
-            respond(nil)
-            return
+            let promise = Promise<RedirectUrl>()
+            let error = SlacketError.preconditionsNotMet
+            Log.error(error.description)
+            promise.reject(error: error)
+            return promise
         }
-        
-        let redirectUrl = PocketAuthorizationAction.accessTokenRequest.redirectUrl(user: user)
-        PocketAuthorizeAPIConnector.requestAuthorization(redirectUrl: redirectUrl) { response in
-            guard let (authorizationResponse, redirectUrl) = response else {
-                Log.debug(ConnectorError.pocketAuthorizationRequestService)
-                respond(nil)
-                return
-            }
+
+        let redirectUrl: RedirectUrl = PocketAuthorizationAction.accessTokenRequest.redirectUrl(user: user)
+        let promise = PocketAuthorizeAPIConnector.requestAuthorization(redirectUrl: redirectUrl)
+        return promise.then({ response -> Promise<Bool> in
+            let (authorizationResponse, _) = response
             let authorizationData = PocketAuthorizationData(id: user.keyId,
                                                             requestToken: authorizationResponse.pocketRequestToken)
-            let _ = PocketAuthorizationDataStore.sharedInstance.set(data: authorizationData)
-            respond(redirectUrl)
-        }
+            return PocketAuthorizationDataStore.sharedInstance.set(data: authorizationData)
+        }).then({ _ -> RedirectUrl in
+            return redirectUrl
+        })
     }
 }
