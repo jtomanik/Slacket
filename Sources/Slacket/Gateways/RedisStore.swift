@@ -10,7 +10,7 @@ import Foundation
 import Environment
 import Redbird
 import LoggerAPI
-import When
+import Promissum
 
 protocol RedisClientType {
 
@@ -51,59 +51,59 @@ extension RedisStoreProvider where Storable: RedisStorableType, Storable.Identif
     }
 
     func get(keyId: Storable.Identifier) -> Promise<Storable> {
-        let promise = Promise<Storable>()
+        let source = PromiseSource<Storable>(dispatch: .Synchronous)
         guard let client = redisStore.client else {
-            promise.reject(error: DataStoreError.clientNotFound)
-            return promise
+            source.reject(error: DataStoreError.clientNotFound)
+            return source.promise
         }
         
         if let object = try? client.command("GET", params: [keyId]),
             storable = Storable.deserialize(redisObject: object) {
                 Log.debug("Redis GET for key: \(keyId)")
-                promise.resolve(value: storable)
+                source.resolve(value: storable)
         } else {
             let error = DataStoreError.failure(for: .get)
             Log.error(error)
-            promise.reject(error: error)
+            source.reject(error: error)
         }
-        return promise
+        return source.promise
     }
 
     func set(data: Storable) -> Promise<Bool> {
-        let promise = Promise<Bool>()
+        let source = PromiseSource<Bool>(dispatch: .Synchronous)
         guard let client = redisStore.client else {
-            promise.reject(error: DataStoreError.clientNotFound)
-            return promise
+            source.reject(error: DataStoreError.clientNotFound)
+            return source.promise
         }
         
         if let serialized = data.serialize(),
             _ = try? client.command("SET", params: [data.keyId, serialized]).toString() {
                 Log.debug("Redis SET for key: \(data.keyId)")
-                promise.resolve(value: true)
+                source.resolve(value: true)
         } else {
             let error = DataStoreError.failure(for: .set)
             Log.error(error)
-            promise.reject(error: error)
+            source.reject(error: error)
         }
-        return promise
+        return source.promise
     }
 
     func clear(keyId: Storable.Identifier) -> Promise<Bool> {
-        let promise = Promise<Bool>()
+        let source = PromiseSource<Bool>(dispatch: .Synchronous)
         guard let client = redisStore.client else {
-            promise.reject(error: DataStoreError.clientNotFound)
-            return promise
+            source.reject(error: DataStoreError.clientNotFound)
+            return source.promise
         }
         
         if let result = try? client.command("DEL", params: [keyId]).toInt() {
             Log.debug("Redis DEL for key: \(keyId)")
-            promise.resolve(value: result > 0)
+            source.resolve(value: result > 0)
         } else {
             let error = DataStoreError.failure(for: .del)
             Log.error(error)
-            promise.reject(error: error)
+            source.reject(error: error)
         }
-        return promise
+        return source.promise
     }
 }
 

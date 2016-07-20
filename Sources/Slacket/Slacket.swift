@@ -9,6 +9,7 @@
 import Foundation
 import Kitura
 import HealthCheck
+import LoggerAPI
 
 import libc
 
@@ -39,6 +40,9 @@ struct Slacket: ServerModuleType {
     private let router: Router
 
     init(using router: Router) {
+        if LaunchArgumentsProcessor.onLocalHost {
+            Log.debug("running locally")
+        }
         self.router = router
         self.setupRoutes()
     }

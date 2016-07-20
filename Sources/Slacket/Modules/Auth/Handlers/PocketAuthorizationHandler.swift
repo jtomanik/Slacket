@@ -11,7 +11,7 @@ import Foundation
 import Kitura
 import HeliumLogger
 import LoggerAPI
-import When
+import Promissum
 
 enum PocketAuthorizationAction: HandlerAction {
 
@@ -97,16 +97,14 @@ struct PocketAuthorizationHandler: Handler, ErrorType {
         case .authorizationRequest:
             if let slacketUser = SlacketUserParser.parse(body: ParsedBody.urlEncoded(parsedBody)) where slacketUser.pocketAccessToken == nil {
                 PocketAuthorizationRequestService.process(user: slacketUser)
-                    .done(handler: { redirectUrl in
+                    .then(handler: { redirectUrl in
                         redirectView.redirect(to: redirectUrl)
-                    }).fail(handler: { error in
-                        if let error = error as? Describable {
-                            let error = ConnectorError.pocketAuthorizationHandlerRedirectUrl
-                            Log.error(error)
-                            errorView.error(message: error.description)
-                            next()
-                            return
-                        }
+                    }).trap(handler: { error in
+                        let error = ConnectorError.pocketAuthorizationHandlerRedirectUrl
+                        Log.error(error)
+                        errorView.error(message: error.description)
+                        next()
+                        return
                     })
             } else {
                 let error = ConnectorError.pocketAuthorizationHandlerSlacketUser
@@ -120,20 +118,19 @@ struct PocketAuthorizationHandler: Handler, ErrorType {
             if let slacketUser = SlacketUserParser.parse(body: ParsedBody.urlEncoded(parsedBody)) where slacketUser.pocketAccessToken == nil,
                 let user = slacketUser as? SlacketUser{
                 PocketAccessTokenRequestService.process(user: slacketUser)
-                    .then({ accessTokenResponse -> Promise<Bool> in
+                    .map(transform: { accessTokenResponse -> Promise<Bool> in
                         let fullSlacketUser = SlacketUser(slackId: user.slackId,
                                                           slackTeamId:  user.slackTeamId,
                                                           pocketAccessToken: accessTokenResponse.pocketAccessToken,
                                                           pocketUsername: accessTokenResponse.pocketUsername)
                         return SlacketUserDataStore.sharedInstance.set(data: fullSlacketUser)
-                    }).then({ _ in
+                    }).map(transform: { _ in
                         messageView.show(message: .authorized)
-                    }).fail(handler: { error in
-                        if let error = error as? Describable {
-                            Log.error(error)
-                            errorView.error(message: error.description)
-                            next()
-                        }
+                    }).trap(handler: { error in
+                        let error = error as! Describable
+                        Log.error(error)
+                        errorView.error(message: error.description)
+                        next()
                 })
             }
         case .authorizationTest:

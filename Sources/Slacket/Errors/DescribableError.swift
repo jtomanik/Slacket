@@ -6,4 +6,4 @@
 //
 //
 
-protocol Describable: CustomStringConvertible {}
+protocol Describable: CustomStringConvertible, ErrorProtocol {}

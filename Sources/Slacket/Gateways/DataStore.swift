@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import When
+import Promissum
 
 protocol StoreType { }
 

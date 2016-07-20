@@ -7,7 +7,8 @@
 //
 
 import Foundation
-import When
+import Promissum
+import Dispatch
 
 protocol InMemoryStoreProvider: class, DataStoreProvider {
 
@@ -17,29 +18,29 @@ protocol InMemoryStoreProvider: class, DataStoreProvider {
 extension InMemoryStoreProvider {
 
     func get(keyId: Storable.Identifier) -> Promise<Storable> {
-        let promise = Promise<Storable>()
+        let source = PromiseSource<Storable>(dispatch: .Synchronous)
         if let value = memoryStore[keyId] {
-            promise.resolve(value: value)
+            source.resolve(value: value)
         } else {
-            promise.reject(error: DataStoreError.notFound(key: String(keyId)))
+            source.reject(error: DataStoreError.notFound(key: String(keyId)))
         }
-        return promise
+        return source.promise
     }
 
     func set(data: Storable) -> Promise<Bool> {
-        let promise = Promise<Bool>()
+        let source = PromiseSource<Bool>(dispatch: .Synchronous)
         memoryStore[data.keyId] = data
-        promise.resolve(value: true)
-        return promise
+        source.resolve(value: true)
+        return source.promise
     }
 
     func clear(keyId: Storable.Identifier) -> Promise<Bool> {
-        let promise = Promise<Bool>()
+        let source = PromiseSource<Bool>(dispatch: .Synchronous)
         if memoryStore.removeValue(forKey: keyId) != nil {
-            promise.resolve(value: true)
+            source.resolve(value: true)
         } else {
-            promise.reject(error: DataStoreError.notFound(key: String(keyId)))
+            source.reject(error: DataStoreError.notFound(key: String(keyId)))
         }
-        return promise
+        return source.promise
     }
 }

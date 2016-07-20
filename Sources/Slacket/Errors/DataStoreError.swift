@@ -8,19 +8,19 @@
 
 import Foundation
 
-enum MethodType: String {
+public enum MethodType: String {
     case get
     case set
     case del
 }
 
-enum DataStoreError: ErrorProtocol, Describable {
+public enum DataStoreError: ErrorProtocol, Describable, Equatable {
     case missingRedisHostEnvVariable
     case notFound(key: String)
     case clientNotFound
     case failure(for: MethodType)
     
-    var description: String {
+    public var description: String {
         switch self {
             case .missingRedisHostEnvVariable:
                 return "Cannot find REDIS_HOST environmental variable"
@@ -31,5 +31,20 @@ enum DataStoreError: ErrorProtocol, Describable {
             case .failure(let methodType):
                 return "\(methodType.rawValue) error"
         }
+    }
+}
+
+public func ==(lhs: DataStoreError, rhs: DataStoreError) -> Bool {
+    switch (lhs, rhs) {
+    case(.missingRedisHostEnvVariable, .missingRedisHostEnvVariable):
+        return true
+    case (.notFound(let key1), .notFound(let key2)):
+        return key1 == key2
+    case(.clientNotFound, .clientNotFound):
+        return true
+    case (.failure(let m1), .failure(let m2)):
+        return m1 == m2
+    default:
+        return false
     }
 }

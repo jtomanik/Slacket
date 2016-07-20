@@ -11,7 +11,7 @@ import Foundation
 import Kitura
 import HeliumLogger
 import LoggerAPI
-import When
+import Promissum
 
 enum SlacketAction: HandlerAction {
 
@@ -86,13 +86,12 @@ struct SlacketHandler: Handler, RouterMiddleware, ErrorType {
         case .addCommand:
             if let slackCommand: SlackCommandType = SlackCommandParser.parse(body: request.body) {
                 SlacketService.process(request: slackCommand)
-                    .done(handler: { slackMessage in
+                    .then(handler: { slackMessage in
                         view.show(message: slackMessage)
-                    }).fail(handler: { error in
-                        if let error = error as? Describable {
-                            Log.error(error)
-                            errorView.error(message: error.description)
-                        }
+                    }).trap(handler: { error in
+                        let error = error as! Describable
+                        Log.error(error)
+                        errorView.error(message: error.description)
                     })
             } else {
                 let error = SlacketError.slacketHandlerCouldntParseCommand

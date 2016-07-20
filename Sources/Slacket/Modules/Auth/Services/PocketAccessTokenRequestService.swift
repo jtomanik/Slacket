@@ -8,7 +8,7 @@
 
 import Foundation
 import LoggerAPI
-import When
+import Promissum
 
 protocol PocketAccessTokenRequestServiceProvider {
 
@@ -21,15 +21,15 @@ struct PocketAccessTokenRequestService: PocketAccessTokenRequestServiceProvider 
 
     static func process(user: SlacketUserType) -> Promise<PocketAccessTokenResponseType> {
         guard let user = user as? SlacketUser else {
-            let promise = Promise<PocketAccessTokenResponseType>()
+            let source = PromiseSource<PocketAccessTokenResponseType>(dispatch: .Synchronous)
             let error = SlacketError.preconditionsNotMet
             Log.error(error.description)
-            promise.reject(error: error)
-            return promise
+            source.reject(error: error)
+            return source.promise
         }
 
         let promise = PocketAuthorizationDataStore.sharedInstance.get(keyId: user.keyId)
-        return promise.then({ authData -> Promise<PocketAccessTokenResponseType> in
+        return promise.flatMap(transform: { authData in
             return PocketAuthorizeAPIConnector.requestAccessToken(data: authData)
         })
     }

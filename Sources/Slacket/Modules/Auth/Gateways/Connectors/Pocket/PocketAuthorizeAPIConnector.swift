@@ -11,7 +11,7 @@ import Kitura
 import HeliumLogger
 import LoggerAPI
 import SimpleHttpClient
-import When
+import Promissum
 
 protocol PocketAuthorizeAPIConnectorType {
 
@@ -23,7 +23,7 @@ struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
 
     static func requestAuthorization(redirectUrl url: RedirectUrl) -> Promise<(PocketAuthorizationResponseType, RedirectUrl)> {
 
-        let promise = Promise<(PocketAuthorizationResponseType, RedirectUrl)>()
+        let source = PromiseSource<(PocketAuthorizationResponseType, RedirectUrl)>(dispatch: .Synchronous)
         let requestData = PocketAuthorizationRequest(pocketRedirectUri: url)
         let authorizeEndpoint = PocketAuthorizeAPI.requestAuthorization(requestData)
 
@@ -31,7 +31,7 @@ struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
             guard let status = status else {
                 let error = ConnectorError.missingStatus(for: .pocketAuthorizationRequest)
                 Log.error(error.description)
-                promise.reject(error: error)
+                source.reject(error: error)
                 return
             }
 
@@ -43,26 +43,26 @@ struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
                     let parsedBody = ParsedBody.init(data: data, contentType: authorizeEndpoint.acceptContentType),
                     let authorizationResponse = PocketAuthorizationResponseParser.parse(body: parsedBody),
                     let redirectUrl = authorizeEndpoint.redirectUrl(for: authorizationResponse) {
-                    promise.resolve(value: (authorizationResponse, redirectUrl))
+                    source.resolve(value: (authorizationResponse, redirectUrl))
                 } else {
                     //TODO: ConnectorError.nilDataReturned
                     let error = ConnectorError.nilDataReturned(for: .pocketAuthorizationRequest)
                     Log.debug(error.description)
-                    promise.reject(error: error)
+                    source.reject(error: error)
                 }
             } else {
                 //TODO: ConnectorError.statusNotOk
                 let error = ConnectorError.statusNotOk(for: .pocketAuthorizationRequest)
                 Log.debug(error.description)
-                promise.reject(error: error)
+                source.reject(error: error)
             }
         }
-        return promise
+        return source.promise
     }
 
     static func requestAccessToken(data: PocketAuthorizationData) -> Promise<PocketAccessTokenResponseType> {
 
-        let promise = Promise<PocketAccessTokenResponseType>()
+        let source = PromiseSource<PocketAccessTokenResponseType>(dispatch: .Synchronous)
         let requestData = PocketAccessTokenRequest(pocketRequestToken: data.requestToken)
         let accessTokenEndpoint = PocketAuthorizeAPI.requestAccessToken(requestData)
 
@@ -70,7 +70,7 @@ struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
             guard let status = status else {
                 let error = ConnectorError.missingStatus(for: .pocketAccessTokenRequest)
                 Log.error(error.description)
-                promise.reject(error: error)
+                source.reject(error: error)
                 return
             }
 
@@ -82,20 +82,20 @@ struct PocketAuthorizeAPIConnector: PocketAuthorizeAPIConnectorType {
                     let parsedBody = ParsedBody.init(data: data, contentType: accessTokenEndpoint.acceptContentType),
                     let accessTokenResponse = PocketAccessTokenResponseParser.parse(body: parsedBody) {
                     let accessTokenResponse = accessTokenResponse as PocketAccessTokenResponseType
-                    promise.resolve(value: accessTokenResponse)
+                    source.resolve(value: accessTokenResponse)
                 } else {
                     //TODO: ConnectorError.nilDataReturned
                     let error = ConnectorError.nilDataReturned(for: .pocketAccessTokenRequest)
                     Log.debug(error.description)
-                    promise.reject(error: error)
+                    source.reject(error: error)
                 }
             } else {
                 //TODO: ConnectorError.statusNotOk
                 let error = ConnectorError.statusNotOk(for: .pocketAccessTokenRequest)
                 Log.debug(error.description)
-                promise.reject(error: error)
+                source.reject(error: error)
             }
         }
-        return promise
+        return source.promise
     }
 }

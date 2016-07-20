@@ -11,7 +11,7 @@ import Kitura
 import HeliumLogger
 import LoggerAPI
 import SimpleHttpClient
-import When
+import Promissum
 
 protocol SlackConnectorType {
     
@@ -22,28 +22,28 @@ struct SlackApiConnector: SlackConnectorType {
     
     static func send(message: SlackMessageType, inResponse command: SlackCommandType) -> Promise<Bool> {
         
-        let promise = Promise<Bool>()
+        let source = PromiseSource<Bool>(dispatch: .Synchronous)
         let slackEndpoint = SlackAPI.respond(command: command, message: message)
 
         slackEndpoint.request { error, status, headers, data in
             guard let status = status else {
                 let error = ConnectorError.missingStatus(for: .slack)
                 Log.error(error.description)
-                promise.reject(error: error)
+                source.reject(error: error)
                 return
             }
             
             if 200...299 ~= status {
-                promise.resolve(value: true)
+                source.resolve(value: true)
                 return
             } else {
                 //TODO: ConnectorError.statusNotOk
                 let error = ConnectorError.statusNotOk(for: .slack)
                 Log.error(error.description)
-                promise.reject(error: error)
+                source.reject(error: error)
                 return
             }
         }
-        return promise
+        return source.promise
     }
 }

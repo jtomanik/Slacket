@@ -10,6 +10,7 @@ import Foundation
 import Redbird
 import Kitura
 import LoggerAPI
+import Promissum
 
 extension SlacketUser: StorableType {
 
@@ -50,9 +51,49 @@ extension SlacketUser: RedisStorableType {
     }
 }
 
-class SlacketUserDataStore: RedisStoreProvider {
+class SlacketUserDataStore: DataStoreProvider {
 
     typealias Storable = SlacketUser
 
     static let sharedInstance = SlacketUserDataStore()
+
+    func get(keyId id: Storable.Identifier) -> Promise<Storable> {
+        if LaunchArgumentsProcessor.onLocalHost {
+            return SlacketUserLocalDataStore.sharedInstance.get(keyId: id)
+        } else {
+            return SlacketUserRedisDataStore.sharedInstance.get(keyId: id)
+        }
+    }
+
+    func set(data: Storable) -> Promise<Bool> {
+        if LaunchArgumentsProcessor.onLocalHost {
+            return SlacketUserLocalDataStore.sharedInstance.set(data: data)
+        } else {
+            return SlacketUserRedisDataStore.sharedInstance.set(data: data)
+        }
+    }
+
+    func clear(keyId id: Storable.Identifier) -> Promise<Bool> {
+        if LaunchArgumentsProcessor.onLocalHost {
+            return SlacketUserLocalDataStore.sharedInstance.clear(keyId: id)
+        } else {
+            return SlacketUserRedisDataStore.sharedInstance.clear(keyId: id)
+        }
+    }
+}
+
+class SlacketUserRedisDataStore: RedisStoreProvider {
+
+    typealias Storable = SlacketUser
+
+    static let sharedInstance = SlacketUserRedisDataStore()
+}
+
+class SlacketUserLocalDataStore: InMemoryStoreProvider {
+
+    typealias Storable = SlacketUser
+
+    static let sharedInstance = SlacketUserLocalDataStore()
+
+    var memoryStore: [Storable.Identifier: Storable] = [:]
 }

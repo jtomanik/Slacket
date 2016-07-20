@@ -11,7 +11,7 @@ import Kitura
 import HeliumLogger
 import LoggerAPI
 import SimpleHttpClient
-import When
+import Promissum
 
 protocol PocketConnectorType {
 
@@ -22,12 +22,13 @@ struct PocketApiConnector: PocketConnectorType {
 
     static func addLink(url: String, tags: [String]?, user: SlacketUserType) -> Promise<PocketItemType> {
 
-        let promise = Promise<PocketItemType>()
+        let source = PromiseSource<PocketItemType>(dispatch: .Synchronous)
+
         guard let pocketAccessToken = user.pocketAccessToken else {
             let error = ConnectorError.missingAccessToken
             Log.error(error.description)
-            promise.reject(error: error)
-            return promise
+            source.reject(error: error)
+            return source.promise
         }
 
         let pocketAddRequest = PocketAddRequest(url: url,
@@ -41,7 +42,7 @@ struct PocketApiConnector: PocketConnectorType {
             guard let status = status else {
                 let error = ConnectorError.missingStatus(for: .pocket)
                 Log.error(error.description)
-                promise.reject(error: error)
+                source.reject(error: error)
                 return
             }
 
@@ -52,20 +53,20 @@ struct PocketApiConnector: PocketConnectorType {
                 if let data = data,
                     let pocketAddResponseBody = ParsedBody.init(data: data, contentType: pocketEndpoint.acceptContentType),
                     let pocketAddResponse = PocketAddResponseParser.parse(body: pocketAddResponseBody) where pocketAddResponse.status == 1 {
-                    promise.resolve(value: pocketAddResponse.item)
+                    source.resolve(value: pocketAddResponse.item)
                 } else {
                     //TODO: ConnectorError.nilDataReturned
                     let error = ConnectorError.nilDataReturned(for: .pocket)
                     Log.debug(error.description)
-                    promise.reject(error: error)
+                    source.reject(error: error)
                 }
             } else {
                 //TODO: ConnectorError.statusNotOk
                 let error = ConnectorError.statusNotOk(for: .pocket)
                 Log.debug(error.description)
-                promise.reject(error: error)
+                source.reject(error: error)
             }
         }
-        return promise
+        return source.promise
     }
 }

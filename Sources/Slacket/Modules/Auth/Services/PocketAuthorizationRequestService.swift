@@ -8,7 +8,7 @@
 
 import Foundation
 import LoggerAPI
-import When
+import Promissum
 
 typealias RedirectUrl = String
 
@@ -23,21 +23,21 @@ struct PocketAuthorizationRequestService: PocketAuthorizationRequestServiceProvi
 
     static func process(user: SlacketUserType) -> Promise<RedirectUrl> {
         guard let user = user as? SlacketUser else {
-            let promise = Promise<RedirectUrl>()
+            let source = PromiseSource<RedirectUrl>(dispatch: .Synchronous)
             let error = SlacketError.preconditionsNotMet
             Log.error(error.description)
-            promise.reject(error: error)
-            return promise
+            source.reject(error: error)
+            return source.promise
         }
 
         let redirectUrl: RedirectUrl = PocketAuthorizationAction.accessTokenRequest.redirectUrl(user: user)
         let promise = PocketAuthorizeAPIConnector.requestAuthorization(redirectUrl: redirectUrl)
-        return promise.then({ response -> Promise<Bool> in
+        return promise.flatMap(transform: { response -> Promise<Bool> in
             let (authorizationResponse, _) = response
             let authorizationData = PocketAuthorizationData(id: user.keyId,
                                                             requestToken: authorizationResponse.pocketRequestToken)
             return PocketAuthorizationDataStore.sharedInstance.set(data: authorizationData)
-        }).then({ _ -> RedirectUrl in
+        }).map(transform: { result -> RedirectUrl in
             return redirectUrl
         })
     }
